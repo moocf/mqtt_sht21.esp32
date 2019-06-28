@@ -55,7 +55,9 @@ esp_err_t wifi_start_ap() {
     .beacon_interval = 100,
   }};
   ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &c) );
-  return esp_wifi_start();
+  ERET( esp_wifi_start() );
+  ERET( esp_wifi_connect() );
+  return ESP_OK;
 }
 
 
@@ -65,7 +67,9 @@ esp_err_t wifi_start_sta() {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
   printf(": ssid=%s, password=%s\n", c.sta.ssid, c.sta.password);
-  return esp_wifi_start();
+  ERET( esp_wifi_start() );
+  ERET( esp_wifi_connect() );
+  return ESP_OK;
 }
 
 
