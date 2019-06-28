@@ -4,20 +4,6 @@
 #include "macros.h"
 
 
-static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
-  if (id == WIFI_EVENT_AP_START) {
-    ERETV( httpd_init() );
-  }
-  else if (id == WIFI_EVENT_AP_STACONNECTED) {
-    wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
-    printf("Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
-  } else if (id == WIFI_EVENT_AP_STADISCONNECTED) {
-    wifi_event_ap_stadisconnected_t *d = (wifi_event_ap_stadisconnected_t*) data;
-    printf("Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
-  }
-}
-
-
 esp_err_t wifi_config_ap(char *buff) {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_AP, &c) );
@@ -35,6 +21,20 @@ esp_err_t wifi_config_sta(char *buff) {
     "{\"ssid\": \"%s\", \"password\": \"%s\"}",
     c.sta.ssid, c.sta.password);
   return ESP_OK;
+}
+
+
+static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
+  if (id == WIFI_EVENT_AP_START) {
+    ERETV( httpd_init() );
+  }
+  else if (id == WIFI_EVENT_AP_STACONNECTED) {
+    wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
+    printf("Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+  } else if (id == WIFI_EVENT_AP_STADISCONNECTED) {
+    wifi_event_ap_stadisconnected_t *d = (wifi_event_ap_stadisconnected_t*) data;
+    printf("Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+  }
 }
 
 

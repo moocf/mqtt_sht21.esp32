@@ -60,3 +60,12 @@ esp_err_t sht21_temp(i2c_port_t port, float *ans) {
   *ans = -46.25 + 175.72 * (val / 65536.0);
   return ESP_OK;
 }
+
+
+esp_err_t sht21_json(i2c_port_t port, char *buff) {
+  float rh, temp;
+  ERET( sht21_rh(port, &rh) );
+  ERET( sht21_temp(port, &temp) );
+  sprintf(buff, "{\"rh\": %f, \"temp\": %f}", rh, temp);
+  return ESP_OK;
+}
