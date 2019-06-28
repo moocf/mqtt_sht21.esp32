@@ -61,6 +61,15 @@ static esp_err_t on_wifi_set_config_sta(httpd_req_t *req) {
 }
 
 
+static esp_err_t on_mqtt_config(httpd_req_t *req) {
+  char json[256];
+  ERET( mqtt_config_json(json) );
+  printf("- On MQTT get config: json=%s\n", json);
+  ERET( httpd_resp_set_type(req, TYPE_JSON) );
+  ERET( httpd_resp_sendstr(req, json) );
+  return ESP_OK;
+}
+
 static esp_err_t on_mqtt_set_config(httpd_req_t *req) {
   char json[256];
   httpd_req_recv(req, json, req->content_len);
@@ -103,6 +112,8 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
     ERETV( httpd_on(httpd, "/sht21", HTTP_GET, &on_sht21) );
     ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_GET,  &on_wifi_config_sta) );
     ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_POST,  &on_wifi_set_config_sta) );
+    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_GET, &on_mqtt_config) );
+    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_POST, &on_mqtt_set_config) );
     ERETV( httpd_on(httpd, "/restart", HTTP_POST,  &on_restart) );
     ERETV( httpd_on(httpd, "/*", HTTP_GET, &httpd_on_static) );
     ERETV( mqtt_init(&mqtt) );

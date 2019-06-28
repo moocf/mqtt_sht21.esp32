@@ -25,8 +25,8 @@
   </a>
   </header>
   <ul>
-    <li><a href="#status">Status</a></li>
-    <li><a href="#config">Config</a></li>
+    <li><a href="#wifi">WiFi</a></li>
+    <li><a href="#mqtt">MQTT</a></li>
   </ul>
 </label>
 </nav>
@@ -35,28 +35,35 @@
 <main>
 <section id="index">
 <div id="chart" width="100%"></div>
+<label>RH</label>
+<input type="text" disabled id="rh">
+<label>Temp</label>
+<input type="text" disabled id="temp">
 </section>
 
 
-<section id="status">
-</section>
-
-
-<section id="config">
+<section id="wifi">
 <form>
 <grid>
 <div col="1/2">
   <label>WiFi network</label>
-  <input type="text" placeholder="e.g. mywifi">
+  <input type="text" placeholder="e.g. mywifi" id="ssid">
 </div>
 <div col="1/2">
   <label>WiFi password</label>
-  <input type="text" placeholder="e.g. 12345678">
+  <input type="text" placeholder="e.g. 12345678" id="password">
 </div>
 </grid>
-  <label>MQTT broker URL</label>
-  <input type="text" placeholder="e.g. http://mqttbroker.herokuapp.com">
-  <input type="submit" value="Save">
+<input type="submit" value="Save">
+</form>
+</section>
+
+
+<section id="mqtt">
+<form>
+<label>MQTT broker URL</label>
+<input type="text" placeholder="e.g. http://mqttbroker.herokuapp.com" id="uri">
+<input type="submit" value="Save">
 </form>
 </section>
 </main>
