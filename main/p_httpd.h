@@ -13,3 +13,4 @@ esp_err_t httpd_on(httpd_handle_t handle,
 );
 esp_err_t httpd_on_static(httpd_req_t *req);
 esp_err_t httpd_init(httpd_handle_t *handle);
+esp_err_t httpd_deinit(httpd_handle_t handle);

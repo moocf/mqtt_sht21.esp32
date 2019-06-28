@@ -4,5 +4,8 @@
 
 
 esp_err_t i2c_init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t clk_speed);
+esp_err_t i2c_deinit(i2c_port_t port);
 esp_err_t nvs_init();
+esp_err_t nvs_deinit();
 esp_err_t spiffs_init();
+esp_err_t spiffs_deinit();

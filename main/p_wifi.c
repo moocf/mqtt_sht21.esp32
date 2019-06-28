@@ -82,3 +82,9 @@ esp_err_t wifi_init() {
   wifi_init_config_t c = WIFI_INIT_CONFIG_DEFAULT();
   return esp_wifi_init(&c);
 }
+
+
+esp_err_t wifi_deinit() {
+  ERET( esp_wifi_deinit() );
+  return ESP_OK;
+}

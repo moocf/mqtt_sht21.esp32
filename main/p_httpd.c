@@ -65,3 +65,9 @@ esp_err_t httpd_init(httpd_handle_t *handle) {
   config.uri_match_fn = httpd_uri_match_wildcard;
   return httpd_start(handle, &config);
 }
+
+
+esp_err_t httpd_deinit(httpd_handle_t handle) {
+  ERET( httpd_stop(handle) );
+  return ESP_OK;
+}
