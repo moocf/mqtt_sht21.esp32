@@ -9,6 +9,15 @@
 #define WIFI_AP_PASSWORD  "charmender"
 
 
+static void json_string(const char *json, const char *key, char *buff) {
+  char *k = strstr(json, key);
+  char *start = strchr(k+7, '\"')+1;
+  char *end = strchr(start, '\"');
+  memcpy(buff, start, end-start);
+  buff[end-start] = '\0';
+}
+
+
 esp_err_t wifi_config_sta_json(char *buff) {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
@@ -22,16 +31,8 @@ esp_err_t wifi_config_sta_json(char *buff) {
 esp_err_t wifi_set_config_sta_json(const char *json) {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
-  char *key = strstr(json, "\"ssid\":");
-  char *start = strchr(key+7, '\"')+1;
-  char *end = strstr(start, '\"');
-  memcpy(c.sta.ssid, start, end-start);
-  c.sta.ssid[end-start] = '\0';
-  char *key = strstr(json, "\"password\":");
-  char *start = strchr(key+7, '\"')+1;
-  char *end = strstr(start, '\"');
-  memcpy(c.sta.ssid, start, end-start);
-  c.sta.password[end-start] = '\0';
+  json_string(json, "\"ssid\":", (char*)c.sta.ssid);
+  json_string(json, "\"password\":", (char*)c.sta.password);
   return esp_wifi_set_config(WIFI_IF_STA, &c);
 }
 
