@@ -36,3 +36,9 @@
     }                                                                           \
   } while(0)
 #endif
+
+
+#define EFOPEN(f, path) do { \
+  if ((f) == NULL) ESP_LOGE(TAG, "Cannot open file %s", (path)); \
+  return ESP_FAIL; \
+} while (0)

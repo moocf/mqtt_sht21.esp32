@@ -1,5 +1,5 @@
 #include <freertos/FreeRTOS.h>
-#include "sht21.h"
+#include "p_sht21.h"
 #include "macros.h"
 
 
