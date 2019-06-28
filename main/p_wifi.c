@@ -1,13 +1,20 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
+#include "p_httpd.h"
 #include "macros.h"
 
 
-
-
-
-esp_err_t wifi_init() {
-  return ESP_OK;
+static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
+  if (id == WIFI_EVENT_AP_START) {
+    ERETV( httpd_init() );
+  }
+  else if (id == WIFI_EVENT_AP_STACONNECTED) {
+    wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
+    printf("Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+  } else if (id == WIFI_EVENT_AP_STADISCONNECTED) {
+    wifi_event_ap_stadisconnected_t *d = (wifi_event_ap_stadisconnected_t*) data;
+    printf("Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+  }
 }
 
 
@@ -31,10 +38,13 @@ esp_err_t wifi_config_sta(char *buff) {
 }
 
 
-esp_err_t wifi_ap() {
-  printf("- Set WiFi mode as AP\n");
+esp_err_t wifi_init() {
+  printf("- Init WiFi as AP\n");
+  wifi_init_config_t iconfig = WIFI_INIT_CONFIG_DEFAULT();
+  ERET( esp_wifi_init(&iconfig) );
+  ERET( esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL) );
   ERET( esp_wifi_set_mode(WIFI_MODE_AP) );
-  wifi_config_t wifi_config = {.ap = {
+  wifi_config_t config = {.ap = {
     .ssid = "charmender",
     .password = "charmender",
     .ssid_len = 0,
@@ -44,8 +54,7 @@ esp_err_t wifi_ap() {
     .max_connection = 4,
     .beacon_interval = 100,
   }};
-  ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config) );
-  printf("- Start WiFi\n");
+  ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &config) );
   ERET( esp_wifi_start() );
   return ESP_OK;
 }
