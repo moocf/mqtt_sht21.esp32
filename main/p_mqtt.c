@@ -1,57 +1,36 @@
 #include <nvs_flash.h>
 #include <mqtt_client.h>
+#include "p_device.h"
 #include "p_json.h"
 #include "p_mqtt.h"
 #include "macros.h"
 
 
-#define MQTT_BROKER_URI_KEY "mqtt_broker_uri"
+#define MQTT_URI_KEY "mqtt_uri"
+static char *uri[128];
 
 
 esp_err_t mqtt_config_json(char *buff) {
-  char uri[256];
-  size_t length;
-  nvs_handle_t nvs;
-  ERET( nvs_open("storage", NVS_READWRITE, &nvs) );
-  ERET( nvs_get_blob(nvs, MQTT_BROKER_URI_KEY, uri, &length) );
-  nvs_close(nvs);
   sprintf(buff, "{\"uri\": \"%s\"}", uri);
   return ESP_OK;
 }
 
 
 esp_err_t mqtt_set_config_json(esp_mqtt_client_handle_t handle, const char *json) {
-  char uri[256];
-  int length;
   json_string(json, "\"uri\":", uri);
   ERET( esp_mqtt_client_set_uri(handle, uri) );
-  nvs_handle_t nvs;
-  ERET( nvs_open("storage", NVS_READWRITE, &nvs) );
-  ERET( nvs_set_blob(nvs, MQTT_BROKER_URI_KEY, uri, strlen(uri)+1) );
-  ERET( nvs_commit(nvs) );
-  nvs_close(nvs);
+  NVS_WRITE(nvs, nvs_set_str(nvs, MQTT_URI_KEY, uri));
   return ESP_OK;
 }
 
 
 esp_err_t mqtt_init(esp_mqtt_client_handle_t *handle) {
-  char uri[256];
-  size_t length;
-  nvs_handle_t nvs;
-  printf("- Init MQTT\n");
-  ERET( nvs_open("storage", NVS_READWRITE, &nvs) );
-  printf("- Init MQTT1\n");
-  esp_err_t ret = nvs_get_blob(nvs, MQTT_BROKER_URI_KEY, uri, &length);
-  printf("- Init MQTT2\n");
-  if (ret != ESP_OK) ERET( nvs_set_blob(nvs, MQTT_BROKER_URI_KEY, "", 1) );
-  printf("- Init MQTT3\n");
-  ERET( nvs_commit(nvs) );
-  printf("- Init MQTT4\n");
-  nvs_close(nvs);
+  printf("- Init MQTT client\n");
+  size_t length = sizeof(uri);
+  NVS_READ(nvs, nvs_get_str(nvs, MQTT_URI_KEY, uri, &length));
   esp_mqtt_client_config_t c = {
     .uri = uri
   };
-  printf("- Init MQTT5\n");
   *handle = esp_mqtt_client_init(&c);
   if (*handle == NULL) {
     printf("MQTT init failed!\n");
