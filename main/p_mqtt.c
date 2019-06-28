@@ -40,15 +40,23 @@ esp_err_t mqtt_init(esp_mqtt_client_handle_t *handle) {
   nvs_handle_t nvs;
   printf("- Init MQTT\n");
   ERET( nvs_open("storage", NVS_READWRITE, &nvs) );
+  printf("- Init MQTT1\n");
   esp_err_t ret = nvs_get_blob(nvs, MQTT_BROKER_URI_KEY, uri, &length);
+  printf("- Init MQTT2\n");
   if (ret != ESP_OK) ERET( nvs_set_blob(nvs, MQTT_BROKER_URI_KEY, "", 1) );
+  printf("- Init MQTT3\n");
   ERET( nvs_commit(nvs) );
+  printf("- Init MQTT4\n");
   nvs_close(nvs);
   esp_mqtt_client_config_t c = {
     .uri = uri
   };
+  printf("- Init MQTT5\n");
   *handle = esp_mqtt_client_init(&c);
-  ERET( esp_mqtt_client_start(*handle) );
+  if (*handle == NULL) {
+    printf("MQTT init failed!\n");
+    return ESP_FAIL;
+  }
   return ESP_OK;
 }
 

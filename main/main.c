@@ -112,7 +112,10 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
     ERETV( httpd_on(httpd, "/mqtt_config", HTTP_POST, &on_mqtt_set_config) );
     ERETV( httpd_on(httpd, "/restart", HTTP_POST,  &on_restart) );
     ERETV( httpd_on(httpd, "/*", HTTP_GET, &httpd_on_static) );
-    // ERETV( mqtt_init(&mqtt) );
+    ERETV( mqtt_init(&mqtt) );
+    ERETV( esp_mqtt_client_register_event(mqtt, ESP_EVENT_ANY_ID, on_mqtt, mqtt) );
+    ERETV( esp_mqtt_client_start(mqtt) );
+    printf("all init done\n");
   }
   else {
     wifi_on_sta(arg, base, id, data);
