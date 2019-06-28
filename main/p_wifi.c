@@ -1,20 +1,15 @@
+#include <string.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
-#include "p_httpd.h"
+#include "p_wifi.h"
 #include "macros.h"
 
 
-esp_err_t wifi_config_ap(char *buff) {
-  wifi_config_t c;
-  ERET( esp_wifi_get_config(WIFI_IF_AP, &c) );
-  sprintf(buff,
-    "{\"ssid\": \"%s\", \"password\": \"%s\", \"channel\": %d, \"authmode\": %d}",
-    c.ap.ssid, c.ap.password, c.ap.channel, c.ap.authmode);
-  return ESP_OK;
-}
+#define WIFI_AP_SSID      "charmender"
+#define WIFI_AP_PASSWORD  "charmender"
 
 
-esp_err_t wifi_config_sta(char *buff) {
+esp_err_t wifi_config_sta_json(char *buff) {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
   sprintf(buff,
@@ -24,11 +19,25 @@ esp_err_t wifi_config_sta(char *buff) {
 }
 
 
-static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
-  if (id == WIFI_EVENT_AP_START) {
-    ERETV( httpd_init() );
-  }
-  else if (id == WIFI_EVENT_AP_STACONNECTED) {
+esp_err_t wifi_set_config_sta_json(const char *json) {
+  wifi_config_t c;
+  ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
+  char *key = strstr(json, "\"ssid\":");
+  char *start = strchr(key+7, '\"')+1;
+  char *end = strstr(start, '\"');
+  memcpy(c.sta.ssid, start, end-start);
+  c.sta.ssid[end-start] = '\0';
+  char *key = strstr(json, "\"password\":");
+  char *start = strchr(key+7, '\"')+1;
+  char *end = strstr(start, '\"');
+  memcpy(c.sta.ssid, start, end-start);
+  c.sta.password[end-start] = '\0';
+  return esp_wifi_set_config(WIFI_IF_STA, &c);
+}
+
+
+void wifi_on_sta(void *arg, esp_event_base_t base, int32_t id, void *data) {
+  if (id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
     printf("Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
   } else if (id == WIFI_EVENT_AP_STADISCONNECTED) {
@@ -38,15 +47,13 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
 }
 
 
-esp_err_t wifi_init() {
-  printf("- Init WiFi as AP\n");
-  wifi_init_config_t iconfig = WIFI_INIT_CONFIG_DEFAULT();
-  ERET( esp_wifi_init(&iconfig) );
-  ERET( esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL) );
+esp_err_t wifi_start_ap() {
+  printf("- Start WiFi as AP\n");
+  printf(": ssid=%s, password=%s\n", WIFI_AP_SSID, WIFI_AP_PASSWORD);
   ERET( esp_wifi_set_mode(WIFI_MODE_AP) );
-  wifi_config_t config = {.ap = {
-    .ssid = "charmender",
-    .password = "charmender",
+  wifi_config_t c = {.ap = {
+    .ssid = WIFI_AP_SSID,
+    .password = WIFI_AP_PASSWORD,
     .ssid_len = 0,
     .channel = 0,
     .authmode = WIFI_AUTH_WPA_PSK,
@@ -54,7 +61,23 @@ esp_err_t wifi_init() {
     .max_connection = 4,
     .beacon_interval = 100,
   }};
-  ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &config) );
-  ERET( esp_wifi_start() );
-  return ESP_OK;
+  ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &c) );
+  return esp_wifi_start();
+}
+
+
+esp_err_t wifi_start_sta() {
+  printf("- Start WiFi as station\n");
+  ERET( esp_wifi_set_mode(WIFI_MODE_STA) );
+  wifi_config_t c;
+  ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
+  printf(": ssid=%s, password=%s\n", c.sta.ssid, c.sta.password);
+  return esp_wifi_start();
+}
+
+
+esp_err_t wifi_init() {
+  printf("- Init WiFi\n");
+  wifi_init_config_t c = WIFI_INIT_CONFIG_DEFAULT();
+  return esp_wifi_init(&c);
 }

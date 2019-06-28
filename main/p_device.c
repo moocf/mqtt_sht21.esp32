@@ -35,7 +35,7 @@ esp_err_t nvs_init() {
 
 
 esp_err_t spiffs_init() {
-  printf("- Mount SPIFFS as VFS: ");
+  printf("- Mount SPIFFS as VFS\n");
   esp_vfs_spiffs_conf_t config = {
     .base_path = "/spiffs",
     .partition_label = NULL,
@@ -45,6 +45,6 @@ esp_err_t spiffs_init() {
   ERET( esp_vfs_spiffs_register(&config) );
   size_t total, used;
   ERET( esp_spiffs_info(NULL, &total, &used) );
-  printf("total=%d, used=%d\n", total, used);
+  printf(": total=%d, used=%d\n", total, used);
   return ESP_OK;
 }
