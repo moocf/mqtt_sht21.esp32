@@ -1,16 +1,34 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <nvs_flash.h>
+#include <esp_spiffs.h>
 #include "macros.h"
 
 
 static esp_err_t nvs_init() {
+  printf("- Initialize NVS\n");
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ERET( nvs_flash_erase() );
     ERET( nvs_flash_init() );
   }
   ERET( ret );
+  return ESP_OK;
+}
+
+
+static esp_err_t spiffs_init() {
+  printf("- Mount SPIFFS as VFS\n");
+  esp_vfs_spiffs_conf_t config = {
+    .base_path = "/spiffs",
+    .partition_label = NULL,
+    .max_files = 5,
+    .format_if_mount_failed = false,
+  };
+  ERET( esp_vfs_spiffs_register(&config) );
+  size_t total, used;
+  ERET( esp_spiffs_info(NULL, &total, &used) );
+  printf("Total = %d, Used = %d\n", total, used);
   return ESP_OK;
 }
 
