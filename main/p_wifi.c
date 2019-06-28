@@ -17,7 +17,27 @@ static esp_err_t nvs_init() {
 }
 
 
-static esp_err_t wifi_ap() {
+esp_err_t wifi_config_ap(char *buff) {
+  wifi_config_t c;
+  ERET( esp_wifi_get_config(WIFI_IF_AP, &c) );
+  sprintf(buff,
+    "{\"ssid\": \"%s\", \"password\": \"%s\", \"channel\": %d, \"authmode\": %d}",
+    c.ap.ssid, c.ap.password, c.ap.channel, c.ap.authmode);
+  return ESP_OK;
+}
+
+
+esp_err_t wifi_config_sta(char *buff) {
+  wifi_config_t c;
+  ERET( esp_wifi_get_config(WIFI_IF_STA, &c) );
+  sprintf(buff,
+    "{\"ssid\": \"%s\", \"password\": \"%s\"}",
+    c.sta.ssid, c.sta.password);
+  return ESP_OK;
+}
+
+
+esp_err_t wifi_ap() {
   printf("- Set WiFi mode as AP\n");
   ERET( esp_wifi_set_mode(WIFI_MODE_AP) );
   printf("- Set WiFi configuration\n");
