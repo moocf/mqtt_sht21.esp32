@@ -5,17 +5,40 @@ var $ssid = document.querySelector('#ssid');
 var $password = document.querySelector('#password');
 var $mqtt = document.querySelector('#mqtt form');
 var $uri = document.querySelector('#uri');
+var $restart = document.querySelector('#restart form');
 
 
 function request(method, url, data, fn) {
   var xhr = new XMLHttpRequest();
-  xhr.onload = function() {
+  if (fn) xhr.onload = function() {
     fn(JSON.parse(this.responseText));
   };
   xhr.open(method, url);
   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
   xhr.send(data? JSON.stringify(data):data);
 }
+
+
+$wifi.onsubmit = function() {
+  var ssid = $ssid.value;
+  var password = $password.value;
+  request('POST', '/wifi_config_sta', {ssid, password});
+  return false;
+};
+
+
+$mqtt.onsubmit = function() {
+  var uri = $uri.value;
+  request('POST', '/mqtt_config', {uri});
+  return false;
+};
+
+
+$restart.onsubmit = function() {
+  request('POST', '/restart', null);
+  return false;
+};
+
 
 setInterval(() => {
   request('GET', '/sht21', null, (res) => {
