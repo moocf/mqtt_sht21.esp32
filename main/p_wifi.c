@@ -1,25 +1,12 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
-#include <nvs_flash.h>
 #include "macros.h"
 
 
 
-static esp_err_t nvs_init() {
-  printf("- Initialize NVS\n");
-  esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    ERET( nvs_flash_erase() );
-    ERET( nvs_flash_init() );
-  }
-  ERET( ret );
-  return ESP_OK;
-}
 
 
 esp_err_t wifi_init() {
-  ERET( nvs_init() );
-  
   return ESP_OK;
 }
 
@@ -47,7 +34,6 @@ esp_err_t wifi_config_sta(char *buff) {
 esp_err_t wifi_ap() {
   printf("- Set WiFi mode as AP\n");
   ERET( esp_wifi_set_mode(WIFI_MODE_AP) );
-  printf("- Set WiFi configuration\n");
   wifi_config_t wifi_config = {.ap = {
     .ssid = "charmender",
     .password = "charmender",

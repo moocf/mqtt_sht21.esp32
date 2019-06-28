@@ -1,5 +1,4 @@
 #include <esp_log.h>
-#include <esp_spiffs.h>
 #include <esp_wifi.h>
 #include <esp_http_server.h>
 #include "macros.h"
@@ -8,22 +7,6 @@
 
 #define FILE_BUFFER_SIZE  1024
 static const char *TAG = "httpd";
-
-
-static esp_err_t spiffs_init() {
-  printf("- Mount SPIFFS as VFS\n");
-  esp_vfs_spiffs_conf_t config = {
-    .base_path = "/spiffs",
-    .partition_label = NULL,
-    .max_files = 5,
-    .format_if_mount_failed = false,
-  };
-  ERET( esp_vfs_spiffs_register(&config) );
-  size_t total, used;
-  ERET( esp_spiffs_info(NULL, &total, &used) );
-  printf("Total = %d, Used = %d\n", total, used);
-  return ESP_OK;
-}
 
 
 static const char* httpd_media_type(const char *path) {

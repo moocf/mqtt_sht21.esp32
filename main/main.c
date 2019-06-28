@@ -2,6 +2,7 @@
 #include <esp_event.h>
 #include <nvs_flash.h>
 #include <esp_spiffs.h>
+#include "p_device.h"
 #include "p_sht21.h"
 #include "p_wifi.h"
 #include "p_httpd.h"
@@ -37,6 +38,9 @@ static esp_err_t wifi_ap() {
 
 
 void app_main() {
-  // ESP_ERROR_CHECK( nvs_init() );
-  // ESP_ERROR_CHECK( wifi_ap() );
+  tcpip_adapter_init();
+  ERETV( esp_event_loop_create_default() );
+  ERETV( i2c_init(I2C_NUM_0, GPIO_NUM_18, GPIO_NUM_19, 100000) );
+  ERETV( nvs_init() );
+  ERETV( spiffs_init() );
 }

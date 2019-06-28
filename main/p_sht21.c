@@ -3,21 +3,6 @@
 #include "macros.h"
 
 
-esp_err_t i2c_init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t clk_speed) {
-  i2c_config_t config = {
-    .mode = I2C_MODE_MASTER,
-    .sda_io_num = sda,
-    .sda_pullup_en = GPIO_PULLUP_ENABLE,
-    .scl_io_num = scl,
-    .scl_pullup_en = GPIO_PULLUP_ENABLE,
-    .master.clk_speed = clk_speed,
-  };
-  ERET( i2c_param_config(port, &config) );
-  ERET( i2c_driver_install(port, config.mode, 0, 0, 0) );
-  return ESP_OK;
-}
-
-
 esp_err_t sht21_register(i2c_port_t port, uint8_t *ans) {
   uint8_t addr = SHT21_ADDR;
   i2c_cmd_handle_t h = i2c_cmd_link_create();
@@ -55,15 +40,6 @@ esp_err_t sht21_cmd_bytes(i2c_port_t port, uint8_t cmd, uint8_t *buff) {
     i2c_cmd_link_delete(h);
     if (ret == ESP_OK) break;
   }
-  return ESP_OK;
-}
-
-
-esp_err_t sht21_rh(i2c_port_t port, float *ans) {
-  uint8_t buff[3];
-  ERET( sht21_cmd_bytes(port, SHT21_CMD_RH_NO_HOLD, buff) );
-  int16_t intv = (buff[0] << 8) | (buff[1] && 0xFC);
-  *ans = -6 + 125 * (intv / 65536.0);
   return ESP_OK;
 }
 
