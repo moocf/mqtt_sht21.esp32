@@ -9,14 +9,24 @@
 #include "macros.h"
 
 
+static const char *TYPE_JSON = "application/json";
 static i2c_port_t i2c = I2C_NUM_0;
 static httpd_handle_t httpd = NULL;
 
 
-static void on_wifi(void *arg, esp_event_base_t base, uint32_t id, void *data) {
+static esp_err_t on_sht21(httpd_req_t *req) {
+  char json[256];
+  ERET( sht21_json(i2c, json) );
+  ERET( httpd_resp_set_type(req, TYPE_JSON) );
+  return httpd_resp_sendstr(req, json);
+}
+
+
+static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
   if (id == WIFI_EVENT_AP_START) {
     ERETV( httpd_init(&httpd) );
-    ERETV( httpd_on(httpd, "/*", HTTP_GET, httpd_on_static) );
+    ERETV( httpd_on(httpd, "/sht21", HTTP_GET, &on_sht21) );
+    ERETV( httpd_on(httpd, "/*", HTTP_GET, &httpd_on_static) );
   }
   else {
     wifi_on_sta(arg, base, id, data);
@@ -31,8 +41,9 @@ void app_main() {
   ERETV( nvs_init() );
   ERETV( spiffs_init() );
   ERETV( wifi_init() );
+  esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL);
   ERETV( wifi_start_ap() );
   char buff[256];
   ERETV( sht21_json(i2c, buff) );
-  printf(buff);
+  printf("%s\n", buff);
 }
