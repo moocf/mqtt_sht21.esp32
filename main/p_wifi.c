@@ -1,21 +1,13 @@
 #include <string.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
+#include "p_json.h"
 #include "p_wifi.h"
 #include "macros.h"
 
 
 #define WIFI_AP_SSID      "charmender"
 #define WIFI_AP_PASSWORD  "charmender"
-
-
-static void json_string(const char *json, const char *key, char *buff) {
-  char *k = strstr(json, key);
-  char *start = strchr(k+7, '\"')+1;
-  char *end = strchr(start, '\"');
-  memcpy(buff, start, end-start);
-  buff[end-start] = '\0';
-}
 
 
 esp_err_t wifi_config_sta_json(char *buff) {
@@ -51,7 +43,7 @@ void wifi_on_sta(void *arg, esp_event_base_t base, int32_t id, void *data) {
 esp_err_t wifi_start_ap() {
   printf("- Start WiFi as AP\n");
   printf(": ssid=%s, password=%s\n", WIFI_AP_SSID, WIFI_AP_PASSWORD);
-  ERET( esp_wifi_set_mode(WIFI_MODE_AP) );
+  ERET( esp_wifi_set_mode(WIFI_MODE_APSTA) );
   wifi_config_t c = {.ap = {
     .ssid = WIFI_AP_SSID,
     .password = WIFI_AP_PASSWORD,
