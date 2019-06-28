@@ -5,6 +5,7 @@
 
 #define FILE_PATH_MAX     1024
 #define FILE_BUFFER_SIZE  1024
+#define TYPE_JSON         "application/json"
 
 
 const char* httpd_media_type(const char *path) {
@@ -18,6 +19,12 @@ const char* httpd_media_type(const char *path) {
   return "text/plain";
 }
 
+
+esp_err_t httpd_send_json(httpd_req_t *req, const char *json) {
+  ERET( httpd_resp_set_type(req, TYPE_JSON) );
+  ERET( httpd_resp_sendstr(req, json) );
+  return ESP_OK;
+}
 
 esp_err_t httpd_send_file(httpd_req_t *req, const char *path) {
   const char *type = httpd_media_type(path);

@@ -38,8 +38,11 @@ esp_err_t mqtt_init(esp_mqtt_client_handle_t *handle) {
   char uri[256];
   size_t length;
   nvs_handle_t nvs;
+  printf("- Init MQTT\n");
   ERET( nvs_open("storage", NVS_READWRITE, &nvs) );
-  ERET( nvs_get_blob(nvs, MQTT_BROKER_URI_KEY, uri, &length) );
+  esp_err_t ret = nvs_get_blob(nvs, MQTT_BROKER_URI_KEY, uri, &length);
+  if (ret != ESP_OK) ERET( nvs_set_blob(nvs, MQTT_BROKER_URI_KEY, "", 1) );
+  ERET( nvs_commit(nvs) );
   nvs_close(nvs);
   esp_mqtt_client_config_t c = {
     .uri = uri

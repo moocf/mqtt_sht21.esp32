@@ -2,6 +2,8 @@
 #include <esp_event.h>
 #include <nvs_flash.h>
 #include <esp_spiffs.h>
+#include <lwip/err.h>
+#include <lwip/sys.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include "p_device.h"
@@ -12,7 +14,6 @@
 #include "macros.h"
 
 
-static const char *TYPE_JSON = "application/json";
 static i2c_port_t i2c = I2C_NUM_0;
 static httpd_handle_t httpd = NULL;
 static esp_mqtt_client_handle_t mqtt = NULL;
@@ -34,8 +35,7 @@ static esp_err_t on_sht21(httpd_req_t *req) {
   char json[256];
   ERET( sht21_json(i2c, json) );
   printf("- On SHT21: json=%s\n", json);
-  ERET( httpd_resp_set_type(req, TYPE_JSON) );
-  ERET( httpd_resp_sendstr(req, json) );
+  ERET( httpd_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -44,8 +44,7 @@ static esp_err_t on_wifi_config_sta(httpd_req_t *req) {
   char json[256];
   ERET( wifi_config_sta_json(json) );
   printf("- On WiFi get config station: json=%s\n", json);
-  ERET( httpd_resp_set_type(req, TYPE_JSON) );
-  ERET( httpd_resp_sendstr(req, json) );
+  ERET( httpd_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -55,8 +54,7 @@ static esp_err_t on_wifi_set_config_sta(httpd_req_t *req) {
   httpd_req_recv(req, json, req->content_len);
   printf("- On WiFi set config station: json=%s\n", json);
   ERET( wifi_set_config_sta_json(json) );
-  ERET( httpd_resp_set_type(req, TYPE_JSON) );
-  ERET( httpd_resp_sendstr(req, "1") );
+  ERET( httpd_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -65,8 +63,7 @@ static esp_err_t on_mqtt_config(httpd_req_t *req) {
   char json[256];
   ERET( mqtt_config_json(json) );
   printf("- On MQTT get config: json=%s\n", json);
-  ERET( httpd_resp_set_type(req, TYPE_JSON) );
-  ERET( httpd_resp_sendstr(req, json) );
+  ERET( httpd_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -75,8 +72,7 @@ static esp_err_t on_mqtt_set_config(httpd_req_t *req) {
   httpd_req_recv(req, json, req->content_len);
   printf("- On MQTT set config: json=%s\n", json);
   ERET( mqtt_set_config_json(mqtt, json) );
-  ERET( httpd_resp_set_type(req, TYPE_JSON) );
-  ERET( httpd_resp_sendstr(req, "1") );
+  ERET( httpd_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -116,10 +112,18 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
     ERETV( httpd_on(httpd, "/mqtt_config", HTTP_POST, &on_mqtt_set_config) );
     ERETV( httpd_on(httpd, "/restart", HTTP_POST,  &on_restart) );
     ERETV( httpd_on(httpd, "/*", HTTP_GET, &httpd_on_static) );
-    ERETV( mqtt_init(&mqtt) );
+    // ERETV( mqtt_init(&mqtt) );
   }
   else {
     wifi_on_sta(arg, base, id, data);
+  }
+}
+
+
+static void on_ip(void *arg, esp_event_base_t base, int32_t id, void *data) {
+  if (id == IP_EVENT_STA_GOT_IP) {
+    ip_event_got_ip_t *d = (ip_event_got_ip_t*) data;
+    printf("- On Got IP: IP=%s\n", ip4addr_ntoa(&d->ip_info.ip));
   }
 }
 
@@ -132,6 +136,7 @@ void app_main() {
   ERETV( spiffs_init() );
   ERETV( wifi_init() );
   esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL);
+  esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_ip, NULL);
   ERETV( wifi_start_ap() );
   while (true) {
     vTaskDelay(1000 / portTICK_RATE_MS);
