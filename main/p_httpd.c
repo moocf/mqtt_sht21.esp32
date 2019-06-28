@@ -37,7 +37,20 @@ esp_err_t httpd_send_file(httpd_req_t *req, const char *path) {
 }
 
 
-static esp_err_t on_static(httpd_req_t *req) {
+esp_err_t httpd_on(httpd_handle_t h,
+  const char *uri, httpd_method_t method,
+  esp_err_t (*handler)(httpd_req_t *r)) {
+  httpd_uri_t reg = {
+    .uri = uri,
+    .method = method,
+    .handler = handler,
+    .user_ctx = NULL,
+  };
+  return httpd_register_uri_handler(h, &reg);
+};
+
+
+esp_err_t httpd_on_static(httpd_req_t *req) {
   printf("- On HTTPD Static: URI=%s\n", req->uri);
   const char *index = strcmp(req->uri, "/") == 0? "index.html" : "";
   char path[FILE_PATH_MAX];
@@ -46,18 +59,9 @@ static esp_err_t on_static(httpd_req_t *req) {
 }
 
 
-esp_err_t httpd_init() {
+esp_err_t httpd_init(httpd_handle_t *handle) {
   printf("- Init HTTP server\n");
-  httpd_handle_t handle = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.uri_match_fn = httpd_uri_match_wildcard;
-  ERET( httpd_start(&handle, &config) );
-  httpd_uri_t reg_static = {
-    .uri = "/*",
-    .method = HTTP_GET,
-    .handler = on_static,
-    .user_ctx = NULL,
-  };
-  httpd_register_uri_handler(handle, &reg_static);
-  return ESP_OK;
+  return httpd_start(handle, &config);
 }
