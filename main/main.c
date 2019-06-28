@@ -35,7 +35,7 @@ static esp_err_t on_sht21(httpd_req_t *req) {
   char json[256];
   ERET( sht21_json(i2c, json) );
   printf("- On SHT21: json=%s\n", json);
-  ERET( httpd_send_json(req, json) );
+  ERET( httpd_resp_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -44,7 +44,7 @@ static esp_err_t on_wifi_config_sta(httpd_req_t *req) {
   char json[256];
   ERET( wifi_config_sta_json(json) );
   printf("- On WiFi get config station: json=%s\n", json);
-  ERET( httpd_send_json(req, json) );
+  ERET( httpd_resp_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -54,7 +54,7 @@ static esp_err_t on_wifi_set_config_sta(httpd_req_t *req) {
   httpd_req_recv(req, json, req->content_len);
   printf("- On WiFi set config station: json=%s\n", json);
   ERET( wifi_set_config_sta_json(json) );
-  ERET( httpd_send_json(req, json) );
+  ERET( httpd_resp_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -63,7 +63,7 @@ static esp_err_t on_mqtt_config(httpd_req_t *req) {
   char json[256];
   ERET( mqtt_config_json(json) );
   printf("- On MQTT get config: json=%s\n", json);
-  ERET( httpd_send_json(req, json) );
+  ERET( httpd_resp_send_json(req, json) );
   return ESP_OK;
 }
 
@@ -72,7 +72,7 @@ static esp_err_t on_mqtt_set_config(httpd_req_t *req) {
   httpd_req_recv(req, json, req->content_len);
   printf("- On MQTT set config: json=%s\n", json);
   ERET( mqtt_set_config_json(mqtt, json) );
-  ERET( httpd_send_json(req, json) );
+  ERET( httpd_resp_send_json(req, json) );
   return ESP_OK;
 }
 

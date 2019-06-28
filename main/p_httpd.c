@@ -20,13 +20,13 @@ const char* httpd_media_type(const char *path) {
 }
 
 
-esp_err_t httpd_send_json(httpd_req_t *req, const char *json) {
+esp_err_t httpd_resp_send_json(httpd_req_t *req, const char *json) {
   ERET( httpd_resp_set_type(req, TYPE_JSON) );
   ERET( httpd_resp_sendstr(req, json) );
   return ESP_OK;
 }
 
-esp_err_t httpd_send_file(httpd_req_t *req, const char *path) {
+esp_err_t httpd_resp_send_file(httpd_req_t *req, const char *path) {
   const char *type = httpd_media_type(path);
   ERET( httpd_resp_set_type(req, type) );
   FILE *f = fopen(path, "r");
@@ -64,7 +64,7 @@ esp_err_t httpd_on_static(httpd_req_t *req) {
   char path[FILE_PATH_MAX];
   sprintf(path, "/spiffs%s%s", req->uri, index);
   printf(": uri=%s, path=%s\n", req->uri, path);
-  return httpd_send_file(req, path);
+  return httpd_resp_send_file(req, path);
 }
 
 
