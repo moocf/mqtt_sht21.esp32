@@ -16,7 +16,7 @@ static httpd_handle_t httpd = NULL;
 
 static esp_err_t deinit() {
   ERET( httpd_deinit(httpd) );
-  ERET( wifi_deinit() );
+  ERET( esp_wifi_deinit() );
   ERET( spiffs_deinit() );
   ERET( nvs_deinit() );
   ERET( i2c_deinit(i2c) );
@@ -57,7 +57,6 @@ static esp_err_t on_wifi_set_config_sta(httpd_req_t *req) {
 
 static esp_err_t on_restart(httpd_req_t *req) {
   printf("- On Restart\n");
-  ERET( deinit() );
   esp_restart();
   return ESP_OK;
 }
@@ -87,6 +86,4 @@ void app_main() {
   ERETV( wifi_init() );
   esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL);
   ERETV( wifi_start_ap() );
-  char buff[256];
-  ERETV( sht21_json(i2c, buff) );
 }

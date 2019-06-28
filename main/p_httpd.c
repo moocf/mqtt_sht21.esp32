@@ -9,6 +9,7 @@
 
 const char* httpd_media_type(const char *path) {
   const char *ext = strrchr(path, '.');
+  if (ext == NULL) return "text/plain";
   if (strcmp(ext, ".html") == 0) return "text/html";
   if (strcmp(ext, ".css") == 0) return "text/css";
   if (strcmp(ext, ".js") == 0) return "text/javascript";
@@ -51,10 +52,11 @@ esp_err_t httpd_on(httpd_handle_t h,
 
 
 esp_err_t httpd_on_static(httpd_req_t *req) {
-  printf("- On HTTPD Static: URI=%s\n", req->uri);
+  printf("- On HTTPD Static: uri=%s\n", req->uri);
   const char *index = strcmp(req->uri, "/") == 0? "index.html" : "";
   char path[FILE_PATH_MAX];
   sprintf(path, "/spiffs%s%s", req->uri, index);
+  printf(": uri=%s, path=%s\n", req->uri, path);
   return httpd_send_file(req, path);
 }
 

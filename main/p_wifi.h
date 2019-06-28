@@ -8,4 +8,3 @@ void wifi_on_sta(void *arg, esp_event_base_t base, int32_t id, void *data);
 esp_err_t wifi_start_ap();
 esp_err_t wifi_start_sta();
 esp_err_t wifi_init();
-esp_err_t wifi_deinit();
