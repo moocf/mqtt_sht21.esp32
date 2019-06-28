@@ -17,6 +17,13 @@ static esp_err_t nvs_init() {
 }
 
 
+esp_err_t wifi_init() {
+  ERET( nvs_init() );
+  
+  return ESP_OK;
+}
+
+
 esp_err_t wifi_config_ap(char *buff) {
   wifi_config_t c;
   ERET( esp_wifi_get_config(WIFI_IF_AP, &c) );
