@@ -18,6 +18,7 @@ static i2c_port_t i2c = I2C_NUM_0;
 static httpd_handle_t httpd = NULL;
 static esp_mqtt_client_handle_t mqtt = NULL;
 static bool mqtt_connected = false;
+static bool wifi_connected = false;
 
 
 static esp_err_t deinit() {
@@ -97,7 +98,6 @@ void on_mqtt(void *arg, esp_event_base_t base, int32_t id, void *data) {
     break;
     case MQTT_EVENT_DISCONNECTED:
     printf("@ Disconnected from MQTT broker\n");
-    ERETV( esp_mqtt_client_reconnect(h) );
     mqtt_connected = false;
     break;
     default:
@@ -120,10 +120,11 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
     break;
     case WIFI_EVENT_STA_CONNECTED:
     printf("@ Connected to WiFi AP '%s'\n", sta.ssid);
+    wifi_connected = true;
     break;
     case WIFI_EVENT_STA_DISCONNECTED:
     printf("@ Disconnected from WiFi AP '%s'\n", sta.ssid);
-    ERETV( esp_wifi_connect() );
+    wifi_connected = false;
     break;
     case WIFI_EVENT_AP_START:
     printf("@ WiFi AP mode started\n");
@@ -176,8 +177,15 @@ void app_main() {
   esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, on_ip, NULL);
   ERETV( wifi_start_apsta() );
   while (true) {
-    vTaskDelay(10000 / portTICK_RATE_MS);
-    if (!mqtt_connected) continue;
+    printf("- Waiting %d ms ...\n", mqtt_interval());
+    vTaskDelay(mqtt_interval() / portTICK_RATE_MS);
+    if (!wifi_connected) {
+      ERETV( esp_wifi_connect() );
+      continue;
+    } else if (!mqtt_connected) {
+      ERETV( esp_mqtt_client_reconnect(mqtt) );
+      continue;
+    }
     char json[256];
     ERETV( sht21_json(i2c, json) );
     printf("- Send to MQTT broker\n");

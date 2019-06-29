@@ -5,6 +5,7 @@ var $ssid = document.querySelector('#ssid');
 var $password = document.querySelector('#password');
 var $mqtt = document.querySelector('#mqtt form');
 var $uri = document.querySelector('#uri');
+var $interval = document.querySelector('#interval');
 var $restart = document.querySelector('#restart form');
 
 
@@ -29,7 +30,8 @@ $wifi.onsubmit = function() {
 
 $mqtt.onsubmit = function() {
   var uri = $uri.value;
-  request('POST', '/mqtt_config', {uri});
+  var interval = $interval.value;
+  request('POST', '/mqtt_config', {uri, interval});
   return false;
 };
 
@@ -52,4 +54,5 @@ request('GET', '/wifi_config_sta', null, (res) => {
 });
 request('GET', '/mqtt_config', null, (res) => {
   $uri.value = res.uri;
+  $interval.value = res.interval;
 });
