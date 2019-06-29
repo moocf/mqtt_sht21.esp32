@@ -21,12 +21,13 @@ static bool mqtt_connected = false;
 
 
 static esp_err_t deinit() {
+  printf("- Deinit all\n");
   ERET( mqtt_deinit(mqtt) );
-  ERET( httpd_deinit(httpd) );
+  ERET( httpd_stop(httpd) );
   ERET( esp_wifi_deinit() );
-  ERET( spiffs_deinit() );
-  ERET( nvs_deinit() );
-  ERET( i2c_deinit(i2c) );
+  ERET( esp_vfs_spiffs_unregister(NULL) );
+  ERET( nvs_flash_deinit() );
+  ERET( i2c_driver_delete(port) );
   return ESP_OK;
 }
 

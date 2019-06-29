@@ -22,12 +22,6 @@ esp_err_t i2c_init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t clk
 }
 
 
-esp_err_t i2c_deinit(i2c_port_t port) {
-  ERET( i2c_driver_delete(port) );
-  return ESP_OK;
-}
-
-
 esp_err_t nvs_init() {
   printf("- Init NVS flash\n");
   esp_err_t ret = nvs_flash_init();
@@ -36,12 +30,6 @@ esp_err_t nvs_init() {
     ERET( nvs_flash_init() );
   }
   ERET( ret );
-  return ESP_OK;
-}
-
-
-esp_err_t nvs_deinit() {
-  ERET( nvs_flash_deinit() );
   return ESP_OK;
 }
 
@@ -58,11 +46,5 @@ esp_err_t spiffs_init() {
   size_t total, used;
   ERET( esp_spiffs_info(NULL, &total, &used) );
   printf(": total=%d, used=%d\n", total, used);
-  return ESP_OK;
-}
-
-
-esp_err_t spiffs_deinit() {
-  ERET( esp_vfs_spiffs_unregister(NULL) );
   return ESP_OK;
 }
