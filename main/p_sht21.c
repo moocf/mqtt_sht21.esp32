@@ -21,13 +21,17 @@ esp_err_t sht21_register(i2c_port_t port, uint8_t *ans) {
 
 esp_err_t sht21_cmd_bytes(i2c_port_t port, uint8_t cmd, uint8_t *buff) {
   uint8_t addr = SHT21_ADDR;
-  i2c_cmd_handle_t h = i2c_cmd_link_create();
-  ERET( i2c_master_start(h) );
-  ERET( i2c_master_write_byte(h, (addr << 1) | I2C_MASTER_WRITE, true) );
-  ERET( i2c_master_write_byte(h, cmd, true) );
-  ERET( i2c_master_stop(h) );
-  ERET( i2c_master_cmd_begin(port, h, 1000 / portTICK_RATE_MS) );
-  i2c_cmd_link_delete(h);
+  i2c_cmd_handle_t h;
+  while (true) {
+    h = i2c_cmd_link_create();
+    ERET( i2c_master_start(h) );
+    ERET( i2c_master_write_byte(h, (addr << 1) | I2C_MASTER_WRITE, true) );
+    ERET( i2c_master_write_byte(h, cmd, true) );
+    ERET( i2c_master_stop(h) );
+    esp_err_t ret = i2c_master_cmd_begin(port, h, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(h);
+    if (ret == ESP_OK) break;
+  }
   while (true) {
     vTaskDelay(10 / portTICK_RATE_MS);
     h = i2c_cmd_link_create();
