@@ -90,11 +90,11 @@ void on_mqtt(void *arg, esp_event_base_t base, int32_t id, void *data) {
   esp_mqtt_client_handle_t h = d->client;
   switch(d->event_id) {
     case MQTT_EVENT_CONNECTED:
-    printf("- Connected to MQTT broker\n");
+    printf("@ Connected to MQTT broker\n");
     mqtt_connected = true;
     break;
     case MQTT_EVENT_DISCONNECTED:
-    printf("- Disconnected from MQTT broker\n");
+    printf("@ Disconnected from MQTT broker\n");
     mqtt_connected = false;
     break;
     default:
@@ -104,29 +104,59 @@ void on_mqtt(void *arg, esp_event_base_t base, int32_t id, void *data) {
 
 
 static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
-  if (id == WIFI_EVENT_AP_START) {
+  wifi_sta_config_t sta;
+  wifi_ap_config_t ap;
+  ERETV( esp_wifi_get_config(WIFI_IF_STA, (wifi_config_t*) &sta) );
+  ERETV( esp_wifi_get_config(WIFI_IF_AP, (wifi_config_t*) &ap) );
+  switch (id) {
+    case WIFI_EVENT_STA_START:
+    printf("@ WiFi station mode started\n");
+    printf("- Connect to WiFi AP\n");
+    printf(": ssid=%s, password=%s\n", sta.ssid, sta.password);
+    ERETV( esp_wifi_connect() );
+    break;
+    case WIFI_EVENT_STA_CONNECTED:
+    printf("@ Connected to WiFi AP '%s'\n", sta.ssid);
+    break;
+    case WIFI_EVENT_STA_DISCONNECTED:
+    printf("@ Disconnected from WiFi AP '%s'\n", sta.ssid);
+    break;
+    case WIFI_EVENT_AP_START:
+    printf("@ WiFi AP mode started\n");
+    printf(": ssid=%s, password=%s\n", ap.ssid, ap.password);
     ERETV( httpd_init(&httpd) );
-    ERETV( httpd_on(httpd, "/sht21", HTTP_GET, &on_sht21) );
-    ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_GET,  &on_wifi_config_sta) );
-    ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_POST,  &on_wifi_set_config_sta) );
-    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_GET, &on_mqtt_config) );
-    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_POST, &on_mqtt_set_config) );
-    ERETV( httpd_on(httpd, "/restart", HTTP_POST,  &on_restart) );
-    ERETV( httpd_on(httpd, "/*", HTTP_GET, &httpd_on_static) );
-  }
-  else {
-    wifi_on_sta(arg, base, id, data);
+    ERETV( httpd_on(httpd, "/sht21", HTTP_GET, on_sht21) );
+    ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_GET,  on_wifi_config_sta) );
+    ERETV( httpd_on(httpd, "/wifi_config_sta", HTTP_POST, on_wifi_set_config_sta) );
+    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_GET, on_mqtt_config) );
+    ERETV( httpd_on(httpd, "/mqtt_config", HTTP_POST, on_mqtt_set_config) );
+    ERETV( httpd_on(httpd, "/restart", HTTP_POST,  on_restart) );
+    ERETV( httpd_on(httpd, "/*", HTTP_GET, httpd_on_static) );
+    break;
+    case WIFI_EVENT_AP_STACONNECTED: {
+    wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
+    printf("@ Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+    } break;
+    case WIFI_EVENT_AP_STADISCONNECTED: {
+    wifi_event_ap_stadisconnected_t *d = (wifi_event_ap_stadisconnected_t*) data;
+    printf("@ Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+    } break;
+    default:
+    printf("@ Other WiFi event: %d\n", id);
+    break;
   }
 }
 
 
 static void on_ip(void *arg, esp_event_base_t base, int32_t id, void *data) {
-  if (id == IP_EVENT_STA_GOT_IP) {
+  switch (id) {
+    case IP_EVENT_STA_GOT_IP:
     ip_event_got_ip_t *d = (ip_event_got_ip_t*) data;
-    printf("- On Got IP: IP=%s\n", ip4addr_ntoa(&d->ip_info.ip));
+    printf("@ WiFi station got IP: IP=%s\n", ip4addr_ntoa(&d->ip_info.ip));
     ERETV( mqtt_init(&mqtt) );
-    ERETV( esp_mqtt_client_register_event(mqtt, ESP_EVENT_ANY_ID, &on_mqtt, mqtt) );
+    ERETV( esp_mqtt_client_register_event(mqtt, ESP_EVENT_ANY_ID, on_mqtt, mqtt) );
     ERETV( esp_mqtt_client_start(mqtt) );
+    break;
   }
 }
 
@@ -138,9 +168,9 @@ void app_main() {
   ERETV( nvs_init() );
   ERETV( spiffs_init() );
   ERETV( wifi_init() );
-  esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &on_wifi, NULL);
-  esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_ip, NULL);
-  ERETV( wifi_start_ap() );
+  esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, on_wifi, NULL);
+  esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, on_ip, NULL);
+  ERETV( wifi_start_apsta() );
   while (true) {
     vTaskDelay(1000 / portTICK_RATE_MS);
     if (!mqtt_connected) continue;

@@ -32,16 +32,16 @@ esp_err_t wifi_set_config_sta_json(const char *json) {
 void wifi_on_sta(void *arg, esp_event_base_t base, int32_t id, void *data) {
   if (id == WIFI_EVENT_AP_STACONNECTED) {
     wifi_event_ap_staconnected_t *d = (wifi_event_ap_staconnected_t*) data;
-    printf("Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+    printf("- Station " MACSTR " joined, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
   } else if (id == WIFI_EVENT_AP_STADISCONNECTED) {
     wifi_event_ap_stadisconnected_t *d = (wifi_event_ap_stadisconnected_t*) data;
-    printf("Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
+    printf("- Station " MACSTR " left, AID = %d (event)\n", MAC2STR(d->mac), d->aid);
   }
 }
 
 
-esp_err_t wifi_start_ap() {
-  printf("- Start WiFi as AP\n");
+esp_err_t wifi_start_apsta() {
+  printf("- Start WiFi as AP+station\n");
   printf(": ssid=%s, password=%s\n", WIFI_AP_SSID, WIFI_AP_PASSWORD);
   ERET( esp_wifi_set_mode(WIFI_MODE_APSTA) );
   wifi_config_t c = {.ap = {
@@ -56,11 +56,11 @@ esp_err_t wifi_start_ap() {
   }};
   ERET( esp_wifi_set_config(ESP_IF_WIFI_AP, &c) );
   ERET( esp_wifi_start() );
-  ERET( esp_wifi_connect() );
   return ESP_OK;
 }
 
 
+#if 0
 esp_err_t wifi_start_sta() {
   printf("- Start WiFi as station\n");
   ERET( esp_wifi_set_mode(WIFI_MODE_STA) );
@@ -71,6 +71,7 @@ esp_err_t wifi_start_sta() {
   ERET( esp_wifi_connect() );
   return ESP_OK;
 }
+#endif
 
 
 esp_err_t wifi_init() {
