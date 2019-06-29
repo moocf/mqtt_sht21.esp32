@@ -7,8 +7,8 @@
 
 
 #define MQTT_URI_KEY      "mqtt_uri"
-#define MQTT_URI_DEFAULT  "mqtt://test.mosquitto.org:1883"
-static char *uri[128];
+#define MQTT_URI_DEFAULT  "mqtt://10.2.28.74:1883"
+static char uri[128];
 
 
 esp_err_t mqtt_config_json(char *buff) {
@@ -26,10 +26,10 @@ esp_err_t mqtt_set_config_json(esp_mqtt_client_handle_t handle, const char *json
 
 
 esp_err_t mqtt_init(esp_mqtt_client_handle_t *handle) {
-  printf("- Init MQTT client\n");
   size_t length = sizeof(uri);
   NVS_READ(nvs, nvs_get_str(nvs, MQTT_URI_KEY, uri, &length));
   if (strstr(uri, "mqtt://") != uri) strcpy(uri, MQTT_URI_DEFAULT);
+  printf("- Init MQTT client: usr=%s\n", uri);
   esp_mqtt_client_config_t c = {
     .uri = uri
   };

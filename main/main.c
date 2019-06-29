@@ -27,7 +27,7 @@ static esp_err_t deinit() {
   ERET( esp_wifi_deinit() );
   ERET( esp_vfs_spiffs_unregister(NULL) );
   ERET( nvs_flash_deinit() );
-  ERET( i2c_driver_delete(port) );
+  ERET( i2c_driver_delete(i2c) );
   return ESP_OK;
 }
 
@@ -53,6 +53,7 @@ static esp_err_t on_wifi_config_sta(httpd_req_t *req) {
 static esp_err_t on_wifi_set_config_sta(httpd_req_t *req) {
   char json[256];
   httpd_req_recv(req, json, req->content_len);
+  json[req->content_len] = '\0';
   printf("- On WiFi set config station: json=%s\n", json);
   ERET( wifi_set_config_sta_json(json) );
   ERET( httpd_resp_send_json(req, json) );
@@ -71,6 +72,7 @@ static esp_err_t on_mqtt_config(httpd_req_t *req) {
 static esp_err_t on_mqtt_set_config(httpd_req_t *req) {
   char json[256];
   httpd_req_recv(req, json, req->content_len);
+  json[req->content_len] = '\0';
   printf("- On MQTT set config: json=%s\n", json);
   ERET( mqtt_set_config_json(mqtt, json) );
   ERET( httpd_resp_send_json(req, json) );
@@ -95,6 +97,7 @@ void on_mqtt(void *arg, esp_event_base_t base, int32_t id, void *data) {
     break;
     case MQTT_EVENT_DISCONNECTED:
     printf("@ Disconnected from MQTT broker\n");
+    ERETV( esp_mqtt_client_reconnect(h) );
     mqtt_connected = false;
     break;
     default:
@@ -120,6 +123,7 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
     break;
     case WIFI_EVENT_STA_DISCONNECTED:
     printf("@ Disconnected from WiFi AP '%s'\n", sta.ssid);
+    ERETV( esp_wifi_connect() );
     break;
     case WIFI_EVENT_AP_START:
     printf("@ WiFi AP mode started\n");
@@ -150,13 +154,13 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data) {
 
 static void on_ip(void *arg, esp_event_base_t base, int32_t id, void *data) {
   switch (id) {
-    case IP_EVENT_STA_GOT_IP:
+    case IP_EVENT_STA_GOT_IP: {
     ip_event_got_ip_t *d = (ip_event_got_ip_t*) data;
     printf("@ WiFi station got IP: IP=%s\n", ip4addr_ntoa(&d->ip_info.ip));
-    ERETV( mqtt_init(&mqtt) );
-    ERETV( esp_mqtt_client_register_event(mqtt, ESP_EVENT_ANY_ID, on_mqtt, mqtt) );
-    ERETV( esp_mqtt_client_start(mqtt) );
-    break;
+    ( mqtt_init(&mqtt) );
+    ( esp_mqtt_client_register_event(mqtt, ESP_EVENT_ANY_ID, on_mqtt, mqtt) );
+    ( esp_mqtt_client_start(mqtt) );
+    } break;
   }
 }
 
@@ -172,10 +176,10 @@ void app_main() {
   esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, on_ip, NULL);
   ERETV( wifi_start_apsta() );
   while (true) {
-    vTaskDelay(1000 / portTICK_RATE_MS);
+    vTaskDelay(10000 / portTICK_RATE_MS);
     if (!mqtt_connected) continue;
     char json[256];
-    ERET( sht21_json(i2c, json) );
+    ERETV( sht21_json(i2c, json) );
     printf("- Send to MQTT broker\n");
     printf(": topic=%s, json=%s\n", "/charmender", json);
     esp_mqtt_client_publish(mqtt, "/charmender", json, strlen(json)+1, 0, 0);

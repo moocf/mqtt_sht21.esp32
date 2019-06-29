@@ -51,5 +51,5 @@ request('GET', '/wifi_config_sta', null, (res) => {
   $password.value = res.password;
 });
 request('GET', '/mqtt_config', null, (res) => {
-  $url.value = res.uri;
+  $uri.value = res.uri;
 });
