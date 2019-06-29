@@ -40,6 +40,7 @@ esp_err_t httpd_resp_send_file(httpd_req_t *req, const char *path) {
     ERET( httpd_resp_send_chunk(req, buff, read) );
   } while(read == sizeof(buff));
   ERET( httpd_resp_send_chunk(req, NULL, 0) );
+  fclose(f);
   return ESP_OK;
 }
 
