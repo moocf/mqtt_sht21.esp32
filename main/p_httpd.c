@@ -25,6 +25,7 @@ esp_err_t httpd_resp_send_json(httpd_req_t *req, const char *json) {
   return ESP_OK;
 }
 
+
 esp_err_t httpd_resp_send_file(httpd_req_t *req, const char *path) {
   const char *type = httpd_media_type(path);
   ERET( httpd_resp_set_type(req, type) );
@@ -45,8 +46,7 @@ esp_err_t httpd_resp_send_file(httpd_req_t *req, const char *path) {
 }
 
 
-esp_err_t httpd_on(httpd_handle_t h,
-  const char *uri, httpd_method_t method,
+esp_err_t httpd_on(httpd_handle_t handle, const char *uri, httpd_method_t method,
   httpd_resp_handler_t handler) {
   httpd_uri_t reg = {
     .uri = uri,
@@ -54,7 +54,7 @@ esp_err_t httpd_on(httpd_handle_t h,
     .handler = handler,
     .user_ctx = NULL,
   };
-  return httpd_register_uri_handler(h, &reg);
+  return httpd_register_uri_handler(handle, &reg);
 };
 
 
@@ -63,7 +63,6 @@ esp_err_t httpd_on_static(httpd_req_t *req) {
   const char *index = strcmp(req->uri, "/") == 0? "index.html" : "";
   char path[FILE_PATH_MAX];
   sprintf(path, "/spiffs%s%s", req->uri, index);
-  printf(": uri=%s, path=%s\n", req->uri, path);
   return httpd_resp_send_file(req, path);
 }
 
