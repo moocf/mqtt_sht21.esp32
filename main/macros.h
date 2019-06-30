@@ -2,6 +2,8 @@
 #include <esp_err.h>
 
 
+// ERETV:
+// if error, return (void)
 #if defined(NDEBUG) || defined(ERET_ABORT)
 #define ERETV(x) ESP_ERROR_CHECK(x)
 #elif defined(CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_SILENT)
@@ -20,6 +22,8 @@
 #endif
 
 
+// ERET:
+// if error, return error code
 #if defined(NDEBUG) || defined(ERET_ABORT)
 #define ERET(x) ESP_ERROR_CHECK(x)
 #elif defined(CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_SILENT)
@@ -38,6 +42,7 @@
 #endif
 
 
+// unused:
 #define EFOPEN(f, path) do { \
   if ((f) == NULL) ESP_LOGE(TAG, "Cannot open file %s", (path)); \
   return ESP_FAIL; \
