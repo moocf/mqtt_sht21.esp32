@@ -13,7 +13,7 @@
 
 
 static char uri[128];
-static volatile uint32_t interval = 10000;
+static uint32_t interval = MQTT_INTERVAL_DEFAULT;
 
 
 esp_err_t mqtt_config_json(char *buff) {
@@ -39,7 +39,6 @@ esp_err_t mqtt_init(esp_mqtt_client_handle_t *handle) {
   NVS_READ(nvs, nvs_get_str(nvs, MQTT_URI_KEY, uri, &length));
   if (strstr(uri, "mqtt://") != uri) strcpy(uri, MQTT_URI_DEFAULT);
   NVS_READ(nvs, nvs_get_u32(nvs, MQTT_INTERVAL_KEY, &interval));
-  if (interval == 0) interval = MQTT_INTERVAL_DEFAULT;
   printf("- Init MQTT client: uri=%s, interval=%d\n", uri, interval);
   esp_mqtt_client_config_t c = {
     .uri = uri
