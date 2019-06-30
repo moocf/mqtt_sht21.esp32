@@ -6,6 +6,7 @@
 #define NVS_NAMESPACE "storage"
 
 
+// e.g. NVS_READ(nvs, nvs_get_u32(nvs, "key", &value))
 #define NVS_READ(handle, x) do { \
     nvs_handle_t (handle); \
     ERET( nvs_open(NVS_NAMESPACE, NVS_READONLY, &(handle)) ); \
@@ -14,9 +15,10 @@
   } while (0)
 
 
+// e.g. NVS_WRITE(nvs, nvs_set_u32(nvs, "key", value))
 #define NVS_WRITE(handle, x) do { \
     nvs_handle_t (handle); \
-    ERET( nvs_open(NVS_NAMESPACE, NVS_READONLY, &(handle)) ); \
+    ERET( nvs_open(NVS_NAMESPACE, NVS_READWRITE, &(handle)) ); \
     (x); \
     ERET( nvs_commit((handle)) ); \
     nvs_close((handle)); \
