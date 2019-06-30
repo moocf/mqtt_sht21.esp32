@@ -7,7 +7,8 @@
 
 
 esp_err_t i2c_init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t clk_speed) {
-  printf("- Init I2C %d: sda=%d, scl=%d, clk_speed=%d\n", port, sda, scl, clk_speed);
+  printf("- Init I2C %d\n", port);
+  printf(": sda=%d, scl=%d, clk_speed=%d\n", sda, scl, clk_speed);
   i2c_config_t config = {
     .mode = I2C_MODE_MASTER,
     .sda_io_num = sda,
